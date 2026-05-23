@@ -17,103 +17,102 @@ st.write("Predict whether a customer is Low Risk or High Risk")
 
 st.markdown("---")
 
-# -----------------------------
+# =============================
 # RESET FUNCTION
-# -----------------------------
+# =============================
 def reset_inputs():
-    st.session_state.duration = 12
-    st.session_state.amount = 5000
-    st.session_state.savings = 0
-    st.session_state.credit_history = 1
-    st.session_state.employment = 2
-    st.session_state.age = 30
-    st.session_state.housing = 0
-    st.session_state.job = 1
+    st.session_state.clear()
+    st.rerun()
 
-
-# Initialize session state
-if "duration" not in st.session_state:
-    reset_inputs()
-
-# -----------------------------
-# INPUT FIELDS (SAFE UI)
-# -----------------------------
+# =============================
+# INPUT SECTION
+# =============================
 
 duration = st.number_input(
     "Loan Duration (Months)",
     min_value=1,
-    max_value=120,
-    key="duration"
+    step=1
 )
 
 amount = st.number_input(
     "Credit Amount",
-    min_value=100,
-    max_value=100000,
-    key="amount"
+    min_value=1,
+    step=100
 )
 
 savings = st.selectbox(
     "Savings Level",
     options=[0, 1, 2],
-    format_func=lambda x: ["Little", "Moderate", "Rich"][x],
-    key="savings"
+    format_func=lambda x: {
+        0: "0 - Little Savings",
+        1: "1 - Moderate Savings",
+        2: "2 - Rich Savings"
+    }[x]
 )
 
 credit_history = st.selectbox(
     "Credit History",
     options=[0, 1, 2],
-    format_func=lambda x: ["Poor", "Average", "Good"][x],
-    key="credit_history"
+    format_func=lambda x: {
+        0: "0 - Poor",
+        1: "1 - Average",
+        2: "2 - Good"
+    }[x]
 )
 
 employment_duration = st.number_input(
     "Employment Duration (Years)",
     min_value=0,
-    max_value=40,
-    key="employment"
+    step=1
 )
 
 age = st.number_input(
     "Age",
     min_value=18,
-    max_value=100,
-    key="age"
+    step=1
 )
 
 housing = st.selectbox(
     "Housing Type",
     options=[0, 1, 2],
-    format_func=lambda x: ["Rent", "Own", "Free"][x],
-    key="housing"
+    format_func=lambda x: {
+        0: "0 - Rent",
+        1: "1 - Own",
+        2: "2 - Free"
+    }[x]
 )
 
 job = st.selectbox(
     "Job Skill Level",
     options=[0, 1, 2],
-    format_func=lambda x: ["Unskilled", "Skilled", "Highly Skilled"][x],
-    key="job"
+    format_func=lambda x: {
+        0: "0 - Unskilled",
+        1: "1 - Skilled",
+        2: "2 - Highly Skilled"
+    }[x]
 )
 
-# -----------------------------
-# BUTTONS
-# -----------------------------
+st.markdown("---")
 
-col1, col2 = st.columns(2)
+# =============================
+# CENTER BUTTONS
+# =============================
 
-with col1:
-    predict_btn = st.button("🔍 Predict Credit Risk")
+col1, col2, col3 = st.columns([1, 2, 1])
 
 with col2:
+    predict_btn = st.button("🔍 Predict Credit Risk")
     reset_btn = st.button("🔄 Reset")
 
+# =============================
+# RESET ACTION
+# =============================
 if reset_btn:
     reset_inputs()
-    st.rerun()
 
-# -----------------------------
+# =============================
 # PREDICTION
-# -----------------------------
+# =============================
 
 if predict_btn:
 
@@ -129,14 +128,23 @@ if predict_btn:
     ]])
 
     scaled_data = scaler.transform(input_data)
+
     prediction = model.predict(scaled_data)[0]
     probability = model.predict_proba(scaled_data)[0]
 
+    default_prob = probability[1]
+
     st.markdown("---")
 
-    if prediction == 1:
-        st.error("⚠️ High Credit Risk")
-        st.write(f"Probability of Default: {probability[1]*100:.2f}%")
+    if default_prob < 0.40:
+        st.success("🟢 LOW RISK")
+        st.write(f"Probability of Default: {default_prob*100:.2f}%")
+
+    elif default_prob < 0.70:
+        st.warning("🟠 MEDIUM RISK")
+        st.write(f"Probability of Default: {default_prob*100:.2f}%")
+
     else:
-        st.success("✅ Low Credit Risk")
-        st.write(f"Probability of Repayment: {probability[0]*100:.2f}%")
+        st.error("🔴 HIGH RISK")
+        st.write(f"Probability of Default: {default_prob*100:.2f}%")
+        
