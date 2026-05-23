@@ -1,3 +1,6 @@
+# app.py
+
+```python
 import streamlit as st
 import numpy as np
 import pickle
@@ -27,22 +30,6 @@ st.set_page_config(
 if "page" not in st.session_state:
     st.session_state.page = "welcome"
 
-defaults = {
-    "duration": "",
-    "amount": "",
-    "employment_duration": "",
-    "age": "",
-    "savings": 0,
-    "credit_history": 0,
-    "housing": 0,
-    "job": 0,
-    "result": None,
-}
-
-for k, v in defaults.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
-
 # =============================
 # FUNCTIONS
 # =============================
@@ -52,9 +39,9 @@ def go(page):
     st.rerun()
 
 
-def reset_and_go_input():
+def reset_form():
 
-    keys_to_clear = [
+    fields = [
         "duration",
         "amount",
         "employment_duration",
@@ -65,12 +52,9 @@ def reset_and_go_input():
         "job"
     ]
 
-    for key in keys_to_clear:
-        if key in st.session_state:
-            del st.session_state[key]
-
-    st.session_state.result = None
-    st.session_state.page = "input"
+    for field in fields:
+        if field in st.session_state:
+            del st.session_state[field]
 
     st.rerun()
 
@@ -88,7 +72,7 @@ html, body, [class*="css"] {
 }
 
 .stApp {
-    background: #F2EFE8 !important;
+    background: #F2EFE8;
 }
 
 #MainMenu, footer, header {
@@ -96,77 +80,60 @@ html, body, [class*="css"] {
 }
 
 .block-container {
-    padding: 0 !important;
-    max-width: 100% !important;
-}
-
-[data-testid="stSidebar"] {
-    display: none !important;
+    padding-top: 0rem;
+    max-width: 100%;
 }
 
 /* INPUTS */
 
 div[data-testid="stTextInput"] input {
-    background: #FFFFFF !important;
-    border: 1.5px solid #D8D0C4 !important;
-    border-radius: 12px !important;
-    padding: 14px 16px !important;
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 17px !important;
-    color: #1C2B3A !important;
+    background: white;
+    border: 1.5px solid #D8D0C4;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 17px;
+    color: #1C2B3A;
 }
 
-div[data-testid="stTextInput"] input:focus {
-    border-color: #8B6F4E !important;
-    box-shadow: 0 0 0 3px rgba(139,111,78,0.13) !important;
-}
+/* LABELS */
 
 div[data-testid="stTextInput"] label,
 div[data-testid="stSelectbox"] label {
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    color: #4A5568 !important;
+    font-size: 15px;
+    font-weight: 600;
+    color: #4A5568;
 }
 
+/* SELECT BOX */
+
 div[data-testid="stSelectbox"] > div > div {
-    background: #FFFFFF !important;
-    border: 1.5px solid #D8D0C4 !important;
-    border-radius: 12px !important;
-    font-size: 17px !important;
-    font-family: 'DM Sans', sans-serif !important;
-    color: #1C2B3A !important;
+    background: white;
+    border: 1.5px solid #D8D0C4;
+    border-radius: 12px;
+    font-size: 17px;
+    color: #1C2B3A;
 }
 
 /* BUTTONS */
 
 div.stButton > button {
-    font-family: 'DM Sans', sans-serif !important;
-    font-size: 16px !important;
-    font-weight: 600 !important;
-    border-radius: 12px !important;
-    height: 52px !important;
-    border: none !important;
-    transition: all 0.2s ease !important;
-    cursor: pointer !important;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    height: 52px;
+    border: none;
 }
 
 div.stButton > button[kind="primary"] {
-    background: #1C2B3A !important;
-    color: white !important;
-}
-
-div.stButton > button[kind="primary"]:hover {
-    background: #2D4A62 !important;
-    transform: translateY(-1px) !important;
+    background: #1C2B3A;
+    color: white;
 }
 
 div.stButton > button[kind="secondary"] {
-    background: #FFFFFF !important;
-    color: #6B7B8D !important;
-    border: 1.5px solid #D8D0C4 !important;
+    background: white;
+    color: #6B7B8D;
+    border: 1px solid #D8D0C4;
 }
-
-/* SECTION LABEL */
 
 .sec-label {
     font-size: 13px;
@@ -174,17 +141,7 @@ div.stButton > button[kind="secondary"] {
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: #8B6F4E;
-    display: flex;
-    align-items: center;
-    gap: 10px;
     margin: 32px 0 18px;
-}
-
-.sec-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #D8D0C4;
 }
 
 </style>
@@ -197,129 +154,46 @@ div.stButton > button[kind="secondary"] {
 if st.session_state.page == "welcome":
 
     st.markdown("""
-    <style>
+    <div style="
+        min-height:100vh;
+        display:flex;
+        flex-direction:column;
+        justify-content:center;
+        align-items:center;
+        background:#1C2B3A;
+        padding:40px;
+    ">
 
-    .stApp {
-        background: #1C2B3A !important;
-    }
-
-    .welcome-wrap {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 60px 20px;
-    }
-
-    .welcome-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 68px;
-        font-weight: 700;
-        color: white;
-        text-align: center;
-        line-height: 1.15;
-        margin-bottom: 18px;
-    }
-
-    .welcome-title span {
-        color: #C9A96E;
-    }
-
-    .welcome-sub {
-        font-size: 18px;
-        color: rgba(255,255,255,0.6);
-        text-align: center;
-        max-width: 700px;
-        line-height: 1.7;
-        margin-bottom: 50px;
-    }
-
-    .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(3,1fr);
-        gap: 18px;
-        max-width: 900px;
-        width: 100%;
-        margin-top: 20px;
-        margin-bottom: 50px;
-    }
-
-    .feat-card {
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 18px;
-        padding: 24px;
-    }
-
-    .feat-title {
-        font-size: 16px;
-        font-weight: 700;
-        color: white;
-        margin-top: 12px;
-        margin-bottom: 8px;
-    }
-
-    .feat-desc {
-        font-size: 13px;
-        color: rgba(255,255,255,0.5);
-        line-height: 1.6;
-    }
-
-    </style>
-
-    <div class="welcome-wrap">
-
-        <h1 class="welcome-title">
+        <h1 style="
+            font-family:'Playfair Display',serif;
+            font-size:70px;
+            color:white;
+            text-align:center;
+            line-height:1.1;
+        ">
             Smarter Lending Starts<br>
-            with <span>Better Risk Intelligence</span>
+            with <span style='color:#C9A96E;'>Better Risk Intelligence</span>
         </h1>
 
-        <p class="welcome-sub">
+        <p style="
+            color:rgba(255,255,255,0.65);
+            font-size:18px;
+            text-align:center;
+            max-width:700px;
+            line-height:1.7;
+            margin-top:10px;
+        ">
             Analyse borrower profiles instantly using machine learning powered
-            credit intelligence and risk probability scoring.
+            credit intelligence and risk scoring.
         </p>
 
-        <div class="feature-grid">
-
-            <div class="feat-card">
-                <div style="font-size:30px;">🧠</div>
-                <div class="feat-title">ML Engine</div>
-                <div class="feat-desc">
-                    Trained using real credit behaviour and lending patterns.
-                </div>
-            </div>
-
-            <div class="feat-card">
-                <div style="font-size:30px;">📊</div>
-                <div class="feat-title">Visual Analytics</div>
-                <div class="feat-desc">
-                    View probability scores and repayment insights instantly.
-                </div>
-            </div>
-
-            <div class="feat-card">
-                <div style="font-size:30px;">⚡</div>
-                <div class="feat-title">Fast Assessment</div>
-                <div class="feat-desc">
-                    Analyse multiple borrowers in seconds with automated scoring.
-                </div>
-            </div>
-
-        </div>
-
     </div>
-
     """, unsafe_allow_html=True)
 
-    _, c1, _ = st.columns([3,2,3])
+    _, center, _ = st.columns([3,2,3])
 
-    with c1:
-        if st.button(
-            "🚀 Begin Assessment",
-            use_container_width=True,
-            type="primary"
-        ):
+    with center:
+        if st.button("🚀 Begin Assessment", use_container_width=True, type="primary"):
             go("input")
 
 # =========================================================
@@ -379,12 +253,13 @@ elif st.session_state.page == "input":
                color:#6B7B8D;
                margin:0;
                line-height:1.7;">
-               Fill in all borrower information carefully and click
-               <strong style="color:#1C2B3A;">Analyse Risk</strong>.
+               Fill in all borrower information carefully.
             </p>
 
         </div>
         """, unsafe_allow_html=True)
+
+        # LOAN DETAILS
 
         st.markdown('<div class="sec-label">Loan Details</div>', unsafe_allow_html=True)
 
@@ -403,6 +278,8 @@ elif st.session_state.page == "input":
                 placeholder="e.g. 50000",
                 key="amount"
             )
+
+        # FINANCIAL PROFILE
 
         st.markdown('<div class="sec-label">Financial Profile</div>', unsafe_allow_html=True)
 
@@ -448,6 +325,8 @@ elif st.session_state.page == "input":
                 key="age"
             )
 
+        # PERSONAL CONTEXT
+
         st.markdown('<div class="sec-label">Personal Context</div>', unsafe_allow_html=True)
 
         c7, c8 = st.columns(2)
@@ -476,6 +355,8 @@ elif st.session_state.page == "input":
                 key="job"
             )
 
+        # BUTTONS
+
         st.markdown("<div style='margin-top:40px;'></div>", unsafe_allow_html=True)
 
         left, center1, center2, right = st.columns([2,2,2,2])
@@ -495,7 +376,7 @@ elif st.session_state.page == "input":
             )
 
         if reset_btn:
-            reset_and_go_input()
+            reset_form()
 
         if predict_btn:
 
@@ -544,18 +425,12 @@ elif st.session_state.page == "input":
                         {result}
                     </h2>
 
-                    <p style="
-                        font-size:18px;
-                        color:#555;
-                    ">
+                    <p style="font-size:18px;color:#555;">
                         Default Probability:
                         <strong>{default_prob*100:.2f}%</strong>
                     </p>
 
-                    <p style="
-                        font-size:18px;
-                        color:#555;
-                    ">
+                    <p style="font-size:18px;color:#555;">
                         Repayment Probability:
                         <strong>{repay_prob*100:.2f}%</strong>
                     </p>
@@ -566,15 +441,4 @@ elif st.session_state.page == "input":
             except:
                 st.error("Please enter valid numeric values.")
 
-        st.markdown("""
-        <div style="
-            margin-top:50px;
-            padding-top:20px;
-            border-top:1px solid #D8D0C4;
-            font-size:13px;
-            color:#8B96A3;
-            text-align:center;
-        ">
-            CreditLens Risk Intelligence · Powered by Machine Learning
-        </div>
-        """, unsafe_allow_html=True)
+```
