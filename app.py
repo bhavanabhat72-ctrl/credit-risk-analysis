@@ -25,20 +25,12 @@ def reset_inputs():
     st.rerun()
 
 # =============================
-# INPUT SECTION
+# INPUTS
 # =============================
 
-duration = st.number_input(
-    "Loan Duration (Months)",
-    min_value=1,
-    step=1
-)
+duration = st.number_input("Loan Duration (Months)", min_value=1, step=1)
 
-amount = st.number_input(
-    "Credit Amount",
-    min_value=1,
-    step=100
-)
+amount = st.number_input("Credit Amount", min_value=1, step=100)
 
 savings = st.selectbox(
     "Savings Level",
@@ -60,17 +52,9 @@ credit_history = st.selectbox(
     }[x]
 )
 
-employment_duration = st.number_input(
-    "Employment Duration (Years)",
-    min_value=0,
-    step=1
-)
+employment_duration = st.number_input("Employment Duration (Years)", min_value=0, step=1)
 
-age = st.number_input(
-    "Age",
-    min_value=18,
-    step=1
-)
+age = st.number_input("Age", min_value=18, step=1)
 
 housing = st.selectbox(
     "Housing Type",
@@ -95,18 +79,18 @@ job = st.selectbox(
 st.markdown("---")
 
 # =============================
-# CENTER BUTTONS
+# BUTTONS (SAME LINE)
 # =============================
 
-col1, col2, col3 = st.columns([1, 2, 1])
+col1, col2, col3 = st.columns([1, 1, 1])
+
+with col1:
+    predict_btn = st.button("🔍 Predict")
 
 with col2:
-    predict_btn = st.button("🔍 Predict Credit Risk")
     reset_btn = st.button("🔄 Reset")
 
-# =============================
-# RESET ACTION
-# =============================
+# Reset action
 if reset_btn:
     reset_inputs()
 
@@ -136,15 +120,33 @@ if predict_btn:
 
     st.markdown("---")
 
+    # =============================
+    # RESULT + EXPLANATION
+    # =============================
+
     if default_prob < 0.40:
         st.success("🟢 LOW RISK")
         st.write(f"Probability of Default: {default_prob*100:.2f}%")
+
+        st.info(
+            "📌 Reason: Borrower shows strong financial stability "
+            "(good credit history, sufficient savings, stable employment)."
+        )
 
     elif default_prob < 0.70:
         st.warning("🟠 MEDIUM RISK")
         st.write(f"Probability of Default: {default_prob*100:.2f}%")
 
+        st.info(
+            "📌 Reason: Borrower has mixed signals such as moderate savings "
+            "or average credit history, leading to uncertain repayment ability."
+        )
+
     else:
         st.error("🔴 HIGH RISK")
         st.write(f"Probability of Default: {default_prob*100:.2f}%")
-        
+
+        st.info(
+            "📌 Reason: Borrower shows weak financial indicators such as low savings, "
+            "poor credit history, or unstable employment, increasing default risk."
+        )
