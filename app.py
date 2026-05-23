@@ -2,9 +2,16 @@ import streamlit as st
 import numpy as np
 import pickle
 
-# Load model + scaler
+# =============================
+# LOAD MODEL + SCALER
+# =============================
+
 model = pickle.load(open('model.pkl', 'rb'))
 scaler = pickle.load(open('scaler.pkl', 'rb'))
+
+# =============================
+# PAGE CONFIG
+# =============================
 
 st.set_page_config(
     page_title="Credit Risk Analysis",
@@ -20,17 +27,25 @@ st.markdown("---")
 # =============================
 # RESET FUNCTION
 # =============================
+
 def reset_inputs():
-    st.session_state.clear()
+    st.session_state.duration = 1
+    st.session_state.amount = 1000
+    st.session_state.savings = 0
+    st.session_state.credit_history = 1
+    st.session_state.employment_duration = 0
+    st.session_state.age = 18
+    st.session_state.housing = 0
+    st.session_state.job = 0
     st.rerun()
 
 # =============================
-# INPUTS
+# INPUT FIELDS
 # =============================
 
-duration = st.number_input("Loan Duration (Months)", min_value=1, step=1)
+duration = st.number_input("Loan Duration (Months)", min_value=1, step=1, key="duration")
 
-amount = st.number_input("Credit Amount", min_value=1, step=100)
+amount = st.number_input("Credit Amount", min_value=1, step=100, key="amount")
 
 savings = st.selectbox(
     "Savings Level",
@@ -39,7 +54,8 @@ savings = st.selectbox(
         0: "0 - Little Savings",
         1: "1 - Moderate Savings",
         2: "2 - Rich Savings"
-    }[x]
+    }[x],
+    key="savings"
 )
 
 credit_history = st.selectbox(
@@ -49,12 +65,18 @@ credit_history = st.selectbox(
         0: "0 - Poor",
         1: "1 - Average",
         2: "2 - Good"
-    }[x]
+    }[x],
+    key="credit_history"
 )
 
-employment_duration = st.number_input("Employment Duration (Years)", min_value=0, step=1)
+employment_duration = st.number_input(
+    "Employment Duration (Years)",
+    min_value=0,
+    step=1,
+    key="employment_duration"
+)
 
-age = st.number_input("Age", min_value=18, step=1)
+age = st.number_input("Age", min_value=18, step=1, key="age")
 
 housing = st.selectbox(
     "Housing Type",
@@ -63,7 +85,8 @@ housing = st.selectbox(
         0: "0 - Rent",
         1: "1 - Own",
         2: "2 - Free"
-    }[x]
+    }[x],
+    key="housing"
 )
 
 job = st.selectbox(
@@ -73,7 +96,8 @@ job = st.selectbox(
         0: "0 - Unskilled",
         1: "1 - Skilled",
         2: "2 - Highly Skilled"
-    }[x]
+    }[x],
+    key="job"
 )
 
 st.markdown("---")
@@ -82,15 +106,14 @@ st.markdown("---")
 # BUTTONS (SAME LINE)
 # =============================
 
-col1, col2, col3 = st.columns([1, 1, 1])
+col1, col2 = st.columns(2)
 
 with col1:
-    predict_btn = st.button("🔍 Predict")
+    predict_btn = st.button("🔍 Predict Credit Risk")
 
 with col2:
     reset_btn = st.button("🔄 Reset")
 
-# Reset action
 if reset_btn:
     reset_inputs()
 
@@ -100,6 +123,7 @@ if reset_btn:
 
 if predict_btn:
 
+    # Feature vector (MUST match training order)
     input_data = np.array([[
         duration,
         amount,
@@ -111,8 +135,13 @@ if predict_btn:
         job
     ]])
 
+    # Convert safely
+    input_data = input_data.astype(float)
+
+    # Scale
     scaled_data = scaler.transform(input_data)
 
+    # Predict
     prediction = model.predict(scaled_data)[0]
     probability = model.predict_proba(scaled_data)[0]
 
@@ -121,32 +150,38 @@ if predict_btn:
     st.markdown("---")
 
     # =============================
-    # RESULT + EXPLANATION
+    # RESULT SECTION
     # =============================
 
     if default_prob < 0.40:
         st.success("🟢 LOW RISK")
-        st.write(f"Probability of Default: {default_prob*100:.2f}%")
+
+        st.write(f"🔴 Default Risk: {default_prob*100:.2f}%")
+        st.write(f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%")
 
         st.info(
-            "📌 Reason: Borrower shows strong financial stability "
-            "(good credit history, sufficient savings, stable employment)."
+            "📌 Reason: Strong financial profile with good credit history, "
+            "stable income, and sufficient savings."
         )
 
     elif default_prob < 0.70:
         st.warning("🟠 MEDIUM RISK")
-        st.write(f"Probability of Default: {default_prob*100:.2f}%")
+
+        st.write(f"🔴 Default Risk: {default_prob*100:.2f}%")
+        st.write(f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%")
 
         st.info(
-            "📌 Reason: Borrower has mixed signals such as moderate savings "
-            "or average credit history, leading to uncertain repayment ability."
+            "📌 Reason: Mixed financial signals such as average credit history "
+            "or moderate savings leading to uncertainty."
         )
 
     else:
         st.error("🔴 HIGH RISK")
-        st.write(f"Probability of Default: {default_prob*100:.2f}%")
+
+        st.write(f"🔴 Default Risk: {default_prob*100:.2f}%")
+        st.write(f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%")
 
         st.info(
-            "📌 Reason: Borrower shows weak financial indicators such as low savings, "
-            "poor credit history, or unstable employment, increasing default risk."
+            "📌 Reason: Weak financial profile including low savings, poor credit history, "
+            "or unstable employment increases default probability."
         )
