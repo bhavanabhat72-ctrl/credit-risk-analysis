@@ -75,7 +75,7 @@ def reset_and_go_input():
     st.rerun()
 
 # =============================
-# SHARED CSS
+# GLOBAL CSS
 # =============================
 
 st.markdown("""
@@ -111,6 +111,7 @@ div[data-testid="stTextInput"] input {
     border: 1.5px solid #D8D0C4 !important;
     border-radius: 12px !important;
     padding: 14px 16px !important;
+    font-family: 'DM Sans', sans-serif !important;
     font-size: 17px !important;
     color: #1C2B3A !important;
 }
@@ -132,18 +133,21 @@ div[data-testid="stSelectbox"] > div > div {
     border: 1.5px solid #D8D0C4 !important;
     border-radius: 12px !important;
     font-size: 17px !important;
+    font-family: 'DM Sans', sans-serif !important;
     color: #1C2B3A !important;
 }
 
 /* BUTTONS */
 
 div.stButton > button {
+    font-family: 'DM Sans', sans-serif !important;
     font-size: 16px !important;
     font-weight: 600 !important;
     border-radius: 12px !important;
     height: 52px !important;
     border: none !important;
     transition: all 0.2s ease !important;
+    cursor: pointer !important;
 }
 
 div.stButton > button[kind="primary"] {
@@ -153,11 +157,11 @@ div.stButton > button[kind="primary"] {
 
 div.stButton > button[kind="primary"]:hover {
     background: #2D4A62 !important;
-    transform: translateY(-1px);
+    transform: translateY(-1px) !important;
 }
 
 div.stButton > button[kind="secondary"] {
-    background: white !important;
+    background: #FFFFFF !important;
     color: #6B7B8D !important;
     border: 1.5px solid #D8D0C4 !important;
 }
@@ -382,12 +386,7 @@ elif st.session_state.page == "input":
         </div>
         """, unsafe_allow_html=True)
 
-        # LOAN DETAILS
-
-        st.markdown(
-            '<div class="sec-label">Loan Details</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="sec-label">Loan Details</div>', unsafe_allow_html=True)
 
         c1, c2 = st.columns(2)
 
@@ -405,12 +404,7 @@ elif st.session_state.page == "input":
                 key="amount"
             )
 
-        # FINANCIAL PROFILE
-
-        st.markdown(
-            '<div class="sec-label">Financial Profile</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="sec-label">Financial Profile</div>', unsafe_allow_html=True)
 
         c3, c4 = st.columns(2)
 
@@ -454,12 +448,7 @@ elif st.session_state.page == "input":
                 key="age"
             )
 
-        # PERSONAL CONTEXT
-
-        st.markdown(
-            '<div class="sec-label">Personal Context</div>',
-            unsafe_allow_html=True
-        )
+        st.markdown('<div class="sec-label">Personal Context</div>', unsafe_allow_html=True)
 
         c7, c8 = st.columns(2)
 
@@ -487,12 +476,7 @@ elif st.session_state.page == "input":
                 key="job"
             )
 
-        # BUTTONS
-
-        st.markdown(
-            "<div style='margin-top:40px;'></div>",
-            unsafe_allow_html=True
-        )
+        st.markdown("<div style='margin-top:40px;'></div>", unsafe_allow_html=True)
 
         left, center1, center2, right = st.columns([2,2,2,2])
 
@@ -512,8 +496,6 @@ elif st.session_state.page == "input":
 
         if reset_btn:
             reset_and_go_input()
-
-        # PREDICTION
 
         if predict_btn:
 
@@ -538,15 +520,10 @@ elif st.session_state.page == "input":
                 repay_prob = 1 - default_prob
 
                 if default_prob < 0.35:
-
                     result = "🟢 LOW RISK"
-
                 elif default_prob < 0.80:
-
                     result = "🟡 MEDIUM RISK"
-
                 else:
-
                     result = "🔴 HIGH RISK"
 
                 st.markdown(f"""
