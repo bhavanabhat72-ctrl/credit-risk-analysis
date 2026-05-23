@@ -20,13 +20,49 @@ st.set_page_config(
 )
 
 # =============================
+# CUSTOM STYLING
+# =============================
+
+st.markdown("""
+    <style>
+
+    .main-title {
+        text-align: center;
+        font-size: 40px;
+        font-weight: bold;
+        color: #1E3A8A;
+    }
+
+    .sub-title {
+        text-align: center;
+        font-size: 18px;
+        color: #555555;
+        margin-bottom: 25px;
+    }
+
+    div.stButton > button {
+        width: 100%;
+        border-radius: 10px;
+        height: 3em;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    </style>
+""", unsafe_allow_html=True)
+
+# =============================
 # TITLE
 # =============================
 
-st.title("💳 Credit Risk Analysis System")
+st.markdown(
+    "<div class='main-title'>💳 Credit Risk Analysis System</div>",
+    unsafe_allow_html=True
+)
 
-st.write(
-    "Predict whether a customer is Low Risk or High Risk"
+st.markdown(
+    "<div class='sub-title'>Predict whether a customer is Low Risk or High Risk</div>",
+    unsafe_allow_html=True
 )
 
 st.markdown("---")
@@ -37,16 +73,8 @@ st.markdown("---")
 
 def reset_inputs():
 
-    keys = [
-        "duration",
-        "amount",
-        "employment_duration",
-        "age"
-    ]
-
-    for key in keys:
-        if key in st.session_state:
-            del st.session_state[key]
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
 
     st.rerun()
 
@@ -73,7 +101,8 @@ savings = st.selectbox(
         0: "0 - Little Savings",
         1: "1 - Moderate Savings",
         2: "2 - Rich Savings"
-    }[x]
+    }[x],
+    key="savings"
 )
 
 credit_history = st.selectbox(
@@ -83,7 +112,8 @@ credit_history = st.selectbox(
         0: "0 - Poor",
         1: "1 - Average",
         2: "2 - Good"
-    }[x]
+    }[x],
+    key="credit_history"
 )
 
 employment_duration = st.text_input(
@@ -105,7 +135,8 @@ housing = st.selectbox(
         0: "0 - Rent",
         1: "1 - Own",
         2: "2 - Free"
-    }[x]
+    }[x],
+    key="housing"
 )
 
 job = st.selectbox(
@@ -115,16 +146,17 @@ job = st.selectbox(
         0: "0 - Unskilled",
         1: "1 - Skilled",
         2: "2 - Highly Skilled"
-    }[x]
+    }[x],
+    key="job"
 )
 
 st.markdown("---")
 
 # =============================
-# BUTTONS
+# CENTERED BUTTONS
 # =============================
 
-col1, col2, col3 = st.columns([1, 1, 1])
+left_space, col1, col2, right_space = st.columns([1, 2, 2, 1])
 
 with col1:
     predict_btn = st.button("🔍 Predict")
@@ -163,20 +195,20 @@ if predict_btn:
         ]])
 
         # =============================
-        # SCALING
+        # SCALE DATA
         # =============================
 
         scaled_data = scaler.transform(input_data)
 
         # =============================
-        # PREDICTION
+        # PREDICT
         # =============================
 
         prediction = model.predict(scaled_data)[0]
 
         probability = model.predict_proba(scaled_data)[0]
 
-        # IMPORTANT FIX
+        # FIXED RISK PROBABILITY
         default_prob = probability[0]
 
         st.markdown("---")
@@ -185,7 +217,7 @@ if predict_btn:
         # LOW RISK
         # =============================
 
-        if default_prob < 0.40:
+        if default_prob < 0.35:
 
             st.success("🟢 LOW RISK")
 
@@ -198,15 +230,15 @@ if predict_btn:
             )
 
             st.info(
-                "📌 Reason: Borrower shows strong financial stability with "
-                "good credit history, better savings, and stable employment."
+                "📌 Reason: Borrower shows strong financial stability "
+                "with good credit history, stable employment, and better savings."
             )
 
         # =============================
         # MEDIUM RISK
         # =============================
 
-        elif default_prob < 0.70:
+        elif default_prob < 0.80:
 
             st.warning("🟠 MEDIUM RISK")
 
@@ -219,9 +251,8 @@ if predict_btn:
             )
 
             st.info(
-                "📌 Reason: Borrower has moderate financial stability. "
-                "Some indicators suggest repayment ability while others "
-                "show possible repayment uncertainty."
+                "📌 Reason: Borrower has moderate financial indicators. "
+                "Some factors support repayment while others indicate moderate risk."
             )
 
         # =============================
