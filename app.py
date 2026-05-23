@@ -19,8 +19,15 @@ st.set_page_config(
     layout="centered"
 )
 
+# =============================
+# TITLE
+# =============================
+
 st.title("💳 Credit Risk Analysis System")
-st.write("Predict whether a customer is Low Risk or High Risk")
+
+st.write(
+    "Predict whether a customer is Low Risk or High Risk"
+)
 
 st.markdown("---")
 
@@ -29,23 +36,35 @@ st.markdown("---")
 # =============================
 
 def reset_inputs():
-    st.session_state.duration = 1
-    st.session_state.amount = 1000
-    st.session_state.savings = 0
-    st.session_state.credit_history = 1
-    st.session_state.employment_duration = 0
-    st.session_state.age = 18
-    st.session_state.housing = 0
-    st.session_state.job = 0
+
+    keys = [
+        "duration",
+        "amount",
+        "employment_duration",
+        "age"
+    ]
+
+    for key in keys:
+        if key in st.session_state:
+            del st.session_state[key]
+
     st.rerun()
 
 # =============================
 # INPUT FIELDS
 # =============================
 
-duration = st.number_input("Loan Duration (Months)", min_value=1, step=1, key="duration")
+duration = st.text_input(
+    "Loan Duration (Months)",
+    placeholder="Example: 12",
+    key="duration"
+)
 
-amount = st.number_input("Credit Amount", min_value=1, step=100, key="amount")
+amount = st.text_input(
+    "Credit Amount",
+    placeholder="Example: 5000",
+    key="amount"
+)
 
 savings = st.selectbox(
     "Savings Level",
@@ -54,8 +73,7 @@ savings = st.selectbox(
         0: "0 - Little Savings",
         1: "1 - Moderate Savings",
         2: "2 - Rich Savings"
-    }[x],
-    key="savings"
+    }[x]
 )
 
 credit_history = st.selectbox(
@@ -65,18 +83,20 @@ credit_history = st.selectbox(
         0: "0 - Poor",
         1: "1 - Average",
         2: "2 - Good"
-    }[x],
-    key="credit_history"
+    }[x]
 )
 
-employment_duration = st.number_input(
+employment_duration = st.text_input(
     "Employment Duration (Years)",
-    min_value=0,
-    step=1,
+    placeholder="Example: 5",
     key="employment_duration"
 )
 
-age = st.number_input("Age", min_value=18, step=1, key="age")
+age = st.text_input(
+    "Age",
+    placeholder="Example: 30",
+    key="age"
+)
 
 housing = st.selectbox(
     "Housing Type",
@@ -85,8 +105,7 @@ housing = st.selectbox(
         0: "0 - Rent",
         1: "1 - Own",
         2: "2 - Free"
-    }[x],
-    key="housing"
+    }[x]
 )
 
 job = st.selectbox(
@@ -96,23 +115,26 @@ job = st.selectbox(
         0: "0 - Unskilled",
         1: "1 - Skilled",
         2: "2 - Highly Skilled"
-    }[x],
-    key="job"
+    }[x]
 )
 
 st.markdown("---")
 
 # =============================
-# BUTTONS (SAME LINE)
+# BUTTONS
 # =============================
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns([1, 1, 1])
 
 with col1:
-    predict_btn = st.button("🔍 Predict Credit Risk")
+    predict_btn = st.button("🔍 Predict")
 
 with col2:
     reset_btn = st.button("🔄 Reset")
+
+# =============================
+# RESET ACTION
+# =============================
 
 if reset_btn:
     reset_inputs()
@@ -123,65 +145,106 @@ if reset_btn:
 
 if predict_btn:
 
-    # Feature vector (MUST match training order)
-    input_data = np.array([[
-        duration,
-        amount,
-        savings,
-        credit_history,
-        employment_duration,
-        age,
-        housing,
-        job
-    ]])
+    try:
 
-    # Convert safely
-    input_data = input_data.astype(float)
+        # =============================
+        # INPUT ARRAY
+        # =============================
 
-    # Scale
-    scaled_data = scaler.transform(input_data)
+        input_data = np.array([[
+            float(duration),
+            float(amount),
+            float(savings),
+            float(credit_history),
+            float(employment_duration),
+            float(age),
+            float(housing),
+            float(job)
+        ]])
 
-    # Predict
-    prediction = model.predict(scaled_data)[0]
-    probability = model.predict_proba(scaled_data)[0]
+        # =============================
+        # SCALING
+        # =============================
 
-    default_prob = probability[1]
+        scaled_data = scaler.transform(input_data)
 
-    st.markdown("---")
+        # =============================
+        # PREDICTION
+        # =============================
 
-    # =============================
-    # RESULT SECTION
-    # =============================
+        prediction = model.predict(scaled_data)[0]
 
-    if default_prob < 0.40:
-        st.success("🟢 LOW RISK")
+        probability = model.predict_proba(scaled_data)[0]
 
-        st.write(f"🔴 Default Risk: {default_prob*100:.2f}%")
-        st.write(f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%")
+        # IMPORTANT FIX
+        default_prob = probability[0]
 
-        st.info(
-            "📌 Reason: Strong financial profile with good credit history, "
-            "stable income, and sufficient savings."
-        )
+        st.markdown("---")
 
-    elif default_prob < 0.70:
-        st.warning("🟠 MEDIUM RISK")
+        # =============================
+        # LOW RISK
+        # =============================
 
-        st.write(f"🔴 Default Risk: {default_prob*100:.2f}%")
-        st.write(f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%")
+        if default_prob < 0.40:
 
-        st.info(
-            "📌 Reason: Mixed financial signals such as average credit history "
-            "or moderate savings leading to uncertainty."
-        )
+            st.success("🟢 LOW RISK")
 
-    else:
-        st.error("🔴 HIGH RISK")
+            st.write(
+                f"🔴 Default Risk: {default_prob*100:.2f}%"
+            )
 
-        st.write(f"🔴 Default Risk: {default_prob*100:.2f}%")
-        st.write(f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%")
+            st.write(
+                f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%"
+            )
 
-        st.info(
-            "📌 Reason: Weak financial profile including low savings, poor credit history, "
-            "or unstable employment increases default probability."
-        )
+            st.info(
+                "📌 Reason: Borrower shows strong financial stability with "
+                "good credit history, better savings, and stable employment."
+            )
+
+        # =============================
+        # MEDIUM RISK
+        # =============================
+
+        elif default_prob < 0.70:
+
+            st.warning("🟠 MEDIUM RISK")
+
+            st.write(
+                f"🔴 Default Risk: {default_prob*100:.2f}%"
+            )
+
+            st.write(
+                f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%"
+            )
+
+            st.info(
+                "📌 Reason: Borrower has moderate financial stability. "
+                "Some indicators suggest repayment ability while others "
+                "show possible repayment uncertainty."
+            )
+
+        # =============================
+        # HIGH RISK
+        # =============================
+
+        else:
+
+            st.error("🔴 HIGH RISK")
+
+            st.write(
+                f"🔴 Default Risk: {default_prob*100:.2f}%"
+            )
+
+            st.write(
+                f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%"
+            )
+
+            st.info(
+                "📌 Reason: Borrower shows weaker financial indicators "
+                "such as poor credit history, low savings, or unstable employment."
+            )
+
+    except:
+
+        st.error("⚠️ Please enter valid numeric values in all text fields.")
