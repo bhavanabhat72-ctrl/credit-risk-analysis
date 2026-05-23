@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import numpy as np
 import pickle
 
@@ -8,105 +7,121 @@ import pickle
 model = pickle.load(open('model.pkl', 'rb'))
 scaler = pickle.load(open('scaler.pkl', 'rb'))
 
-# Page Title
+# -----------------------------------
+# PAGE CONFIG
+# -----------------------------------
 
-st.title("Credit Risk Analysis System")
+st.set_page_config(
+    page_title="Credit Risk Analysis",
+    page_icon="💳",
+    layout="centered"
+)
 
-st.write("Enter Borrower Details to Predict Credit Risk")
+# -----------------------------------
+# TITLE
+# -----------------------------------
 
-# User Inputs
+st.title("💳 Credit Risk Analysis System")
 
-status = st.number_input("Status", min_value=0, max_value=4, value=1)
+st.write(
+    "Enter borrower details to predict whether the applicant is a Low Risk or High Risk customer."
+)
 
-duration = st.number_input("Duration (Months)", min_value=1, max_value=72, value=12)
+st.markdown("---")
 
-credit_history = st.number_input("Credit History", min_value=0, max_value=4, value=2)
+# -----------------------------------
+# USER INPUTS
+# -----------------------------------
 
-purpose = st.number_input("Purpose", min_value=0, max_value=10, value=1)
+duration = st.text_input(
+    "Loan Duration (Months)",
+    placeholder="Example: 12"
+)
 
-amount = st.number_input("Credit Amount", min_value=100, max_value=50000, value=3000)
+amount = st.text_input(
+    "Credit Amount",
+    placeholder="Example: 5000"
+)
 
-savings = st.number_input("Savings", min_value=0, max_value=4, value=1)
+savings = st.text_input(
+    "Savings Account Level",
+    placeholder="0 = little, 1 = moderate, 2 = rich"
+)
 
-employment_duration = st.number_input("Employment Duration", min_value=0, max_value=4, value=2)
+credit_history = st.text_input(
+    "Credit History",
+    placeholder="0 = poor, 1 = average, 2 = good"
+)
 
-installment_rate = st.number_input("Installment Rate", min_value=1, max_value=4, value=2)
+employment_duration = st.text_input(
+    "Employment Duration",
+    placeholder="Example: 4 years"
+)
 
-personal_status_sex = st.number_input("Personal Status Sex", min_value=0, max_value=4, value=2)
+age = st.text_input(
+    "Age",
+    placeholder="Example: 30"
+)
 
-other_debtors = st.number_input("Other Debtors", min_value=0, max_value=2, value=0)
+housing = st.text_input(
+    "Housing Type",
+    placeholder="0 = rent, 1 = own, 2 = free"
+)
 
-present_residence = st.number_input("Present Residence", min_value=1, max_value=4, value=2)
+job = st.text_input(
+    "Job Skill Level",
+    placeholder="0 = unskilled, 1 = skilled, 2 = highly skilled"
+)
 
-property = st.number_input("Property", min_value=0, max_value=3, value=1)
-
-age = st.number_input("Age", min_value=18, max_value=100, value=30)
-
-other_installment_plans = st.number_input("Other Installment Plans", min_value=0, max_value=2, value=0)
-
-housing = st.number_input("Housing", min_value=0, max_value=2, value=1)
-
-number_credits = st.number_input("Number of Credits", min_value=1, max_value=10, value=1)
-
-job = st.number_input("Job", min_value=0, max_value=3, value=2)
-
-people_liable = st.number_input("People Liable", min_value=1, max_value=2, value=1)
-
-telephone = st.number_input("Telephone", min_value=0, max_value=1, value=1)
-
-foreign_worker = st.number_input("Foreign Worker", min_value=0, max_value=1, value=1)
-
-# Prediction Button
+# -----------------------------------
+# PREDICT BUTTON
+# -----------------------------------
 
 if st.button("Predict Credit Risk"):
 
-    input_data = np.array([[
-        status,
-        duration,
-        credit_history,
-        purpose,
-        amount,
-        savings,
-        employment_duration,
-        installment_rate,
-        personal_status_sex,
-        other_debtors,
-        present_residence,
-        property,
-        age,
-        other_installment_plans,
-        housing,
-        number_credits,
-        job,
-        people_liable,
-        telephone,
-        foreign_worker
-    ]])
+    try:
 
-    # Scale Data
+        input_data = np.array([[
+            float(duration),
+            float(amount),
+            float(savings),
+            float(credit_history),
+            float(employment_duration),
+            float(age),
+            float(housing),
+            float(job)
+        ]])
 
-    scaled_data = scaler.transform(input_data)
+        # Scale Data
 
-    # Prediction
+        scaled_data = scaler.transform(input_data)
 
-    prediction = model.predict(scaled_data)[0]
+        # Prediction
 
-    probability = model.predict_proba(scaled_data)[0]
+        prediction = model.predict(scaled_data)[0]
 
-    # Output
+        probability = model.predict_proba(scaled_data)[0]
 
-    if prediction == 1:
+        st.markdown("---")
 
-        st.error("High Credit Risk")
+        # Result
 
-        st.write(f"Probability of Default: {probability[1]*100:.2f}%")
+        if prediction == 1:
 
-        st.write(f"Probability of Repayment: {probability[0]*100:.2f}%")
+            st.error("⚠️ High Credit Risk")
 
-    else:
+            st.write(
+                f"### Probability of Default: {probability[1]*100:.2f}%"
+            )
 
-        st.success("Low Credit Risk")
+        else:
 
-        st.write(f"Probability of Repayment: {probability[0]*100:.2f}%")
+            st.success("✅ Low Credit Risk")
 
-        st.write(f"Probability of Default: {probability[1]*100:.2f}%")
+            st.write(
+                f"### Probability of Repayment: {probability[0]*100:.2f}%"
+            )
+
+    except:
+
+        st.warning("Please enter valid numeric values in all fields.")
