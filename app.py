@@ -5,6 +5,10 @@ import pickle
 model = pickle.load(open('model.pkl', 'rb'))
 scaler = pickle.load(open('scaler.pkl', 'rb'))
 
+# ── debug: print classes order once ──────────────────────
+# Uncomment the line below temporarily to check your model's class order
+# st.write("Model classes:", model.classes_)
+
 st.set_page_config(
     page_title="CreditLens — Risk Intelligence",
     page_icon="🏦",
@@ -14,7 +18,7 @@ st.set_page_config(
 
 # ── Session state ──────────────────────────────────────────
 if "page" not in st.session_state:
-    st.session_state.page = "welcome"
+    st.session_state.page = "input"
 
 defaults = {
     "duration": "", "amount": "", "employment_duration": "", "age": "",
@@ -35,7 +39,7 @@ def reset_and_go_input():
     st.session_state.page = "input"
     st.rerun()
 
-# ── Shared CSS injected once ───────────────────────────────
+# ── Shared CSS ─────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -45,7 +49,6 @@ html, body, [class*="css"] { font-family: 'DM Sans', sans-serif; }
 .block-container            { padding: 0 !important; max-width: 100% !important; }
 [data-testid="stSidebar"]   { display: none !important; }
 
-/* inputs */
 div[data-testid="stTextInput"] input {
     background:#fff !important; border:1.5px solid #D8D0C4 !important;
     border-radius:10px !important; padding:12px 15px !important;
@@ -66,7 +69,6 @@ div[data-testid="stSelectbox"] > div > div {
     font-family:'DM Sans',sans-serif !important; color:#1C2B3A !important;
 }
 
-/* buttons */
 div.stButton > button {
     font-family:'DM Sans',sans-serif !important; font-size:16px !important;
     font-weight:600 !important; border-radius:10px !important;
@@ -92,132 +94,14 @@ div.stButton > button[kind="secondary"]:hover {
 
 
 # ╔══════════════════════════════════════════════════════╗
-# ║  PAGE 1 — WELCOME                                   ║
+# ║  PAGE 1 — INPUT FORM                                ║
 # ╚══════════════════════════════════════════════════════╝
-if st.session_state.page == "welcome":
-
-    st.markdown("""
-    <style>
-    .stApp { background: #1C2B3A !important; }
-    /* make ALL st.markdown text on this page white */
-    .stApp p, .stApp div { color: inherit; }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # ── top spacer
-    st.markdown("<div style='height:52px'></div>", unsafe_allow_html=True)
-
-    # ── brand badge  (plain HTML, no columns wrapper)
-    st.markdown("""
-    <div style="text-align:center;margin-bottom:28px;">
-      <span style="display:inline-flex;align-items:center;gap:9px;
-            background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);
-            border-radius:100px;padding:9px 22px;
-            font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;
-            color:rgba(255,255,255,0.52);">
-        <span style="width:8px;height:8px;border-radius:50%;background:#4CAF82;
-              box-shadow:0 0 7px rgba(76,175,130,0.8);display:inline-block;"></span>
-        CreditLens &nbsp;·&nbsp; Risk Intelligence Platform
-      </span>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ── hero title
-    st.markdown("""
-    <h1 style="font-family:'Playfair Display',serif;font-size:clamp(38px,5.5vw,68px);
-        font-weight:700;color:#FFFFFF;text-align:center;line-height:1.18;
-        letter-spacing:-0.8px;margin:0 auto 20px;max-width:700px;">
-      Smarter Lending Starts<br/>with <span style="color:#C9A96E;">Better Risk</span><br/>Intelligence.
-    </h1>
-    """, unsafe_allow_html=True)
-
-    # ── subtitle
-    st.markdown("""
-    <p style="text-align:center;font-size:17px;font-weight:300;
-       color:rgba(255,255,255,0.48);line-height:1.75;
-       max-width:500px;margin:0 auto 48px;">
-      Analyse any borrower's credit profile in seconds. Our machine-learning engine
-      delivers precise risk scores, probability breakdowns, and actionable insights.
-    </p>
-    """, unsafe_allow_html=True)
-
-    # ── stat boxes
-    st.markdown("""
-    <div style="display:flex;gap:16px;justify-content:center;
-         flex-wrap:wrap;margin-bottom:44px;">
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
-           border-radius:16px;padding:20px 28px;text-align:center;min-width:120px;">
-        <div style="font-family:'Playfair Display',serif;font-size:30px;color:#C9A96E;">3</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.07em;
-             text-transform:uppercase;margin-top:4px;">Risk Tiers</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
-           border-radius:16px;padding:20px 28px;text-align:center;min-width:120px;">
-        <div style="font-family:'Playfair Display',serif;font-size:30px;color:#C9A96E;">8</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.07em;
-             text-transform:uppercase;margin-top:4px;">Input Factors</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
-           border-radius:16px;padding:20px 28px;text-align:center;min-width:120px;">
-        <div style="font-family:'Playfair Display',serif;font-size:30px;color:#C9A96E;">ML</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.07em;
-             text-transform:uppercase;margin-top:4px;">Powered</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
-           border-radius:16px;padding:20px 28px;text-align:center;min-width:120px;">
-        <div style="font-family:'Playfair Display',serif;font-size:30px;color:#C9A96E;">⚡</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.07em;
-             text-transform:uppercase;margin-top:4px;">Instant Score</div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ── feature cards  (3 columns via st.columns — safe because content is native widgets)
-    fc1, fc2, fc3 = st.columns(3, gap="medium")
-    for col, icon, title, desc in [
-        (fc1, "🧠", "ML-Powered Engine",   "Trained on real credit data with calibrated probability outputs."),
-        (fc2, "📊", "Visual Breakdown",     "Animated probability bars and confidence scores at a glance."),
-        (fc3, "🔄", "Multi-Borrower Ready", "Analyse multiple applicants one after another, instantly."),
-    ]:
-        with col:
-            st.markdown(f"""
-            <div style="background:rgba(255,255,255,0.05);
-                 border:1px solid rgba(255,255,255,0.09);border-radius:16px;
-                 padding:22px 20px;height:100%;">
-              <div style="font-size:26px;margin-bottom:10px;">{icon}</div>
-              <p style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.85);
-                 margin:0 0 6px;">{title}</p>
-              <p style="font-size:13px;color:rgba(255,255,255,0.35);
-                 line-height:1.55;margin:0;">{desc}</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-    st.markdown("<div style='height:44px'></div>", unsafe_allow_html=True)
-
-    # ── CTA button — centered
-    _, cta, _ = st.columns([2, 1, 2])
-    with cta:
-        if st.button("🚀  Begin Assessment", use_container_width=True, type="primary"):
-            go("input")
-
-    st.markdown("""
-    <p style="text-align:center;font-size:12px;color:rgba(255,255,255,0.18);
-       margin-top:28px;letter-spacing:0.05em;">
-      For authorized personnel only &nbsp;·&nbsp; © 2025 CreditLens
-    </p>
-    <div style='height:40px'></div>
-    """, unsafe_allow_html=True)
-
-
-# ╔══════════════════════════════════════════════════════╗
-# ║  PAGE 2 — INPUT FORM                                ║
-# ╚══════════════════════════════════════════════════════╝
-elif st.session_state.page == "input":
+if st.session_state.page == "input":
 
     st.markdown("<style>.stApp { background:#F2EFE8 !important; }</style>",
                 unsafe_allow_html=True)
 
-    # top nav bar
+    # nav bar
     st.markdown("""
     <div style="background:#1C2B3A;padding:15px 40px;
          display:flex;align-items:center;justify-content:space-between;">
@@ -228,7 +112,7 @@ elif st.session_state.page == "input":
     </div>
     """, unsafe_allow_html=True)
 
-    # progress bar
+    # progress
     st.markdown("""
     <div style="background:#EAE6DE;padding:10px 40px;
          display:flex;align-items:center;gap:10px;border-bottom:1px solid #D8D0C4;">
@@ -244,7 +128,6 @@ elif st.session_state.page == "input":
     </div>
     """, unsafe_allow_html=True)
 
-    # centered form
     _, form_col, _ = st.columns([1, 5, 1])
     with form_col:
 
@@ -259,7 +142,6 @@ elif st.session_state.page == "input":
         </div>
         """, unsafe_allow_html=True)
 
-        # section label helper
         def sec(label):
             st.markdown(f"""
             <div style="font-size:11px;font-weight:700;letter-spacing:0.18em;
@@ -322,16 +204,31 @@ elif st.session_state.page == "input":
                     float(credit_history), float(employment_duration),
                     float(age), float(housing), float(job)
                 ]])
-                scaled   = scaler.transform(input_data)
-                proba    = model.predict_proba(scaled)[0]
-                dp, rp   = proba[0], 1 - proba[0]
+                scaled = scaler.transform(input_data)
 
-                if dp < 0.35:
+                # ── FIX: check actual class order from model ──────────
+                # model.classes_ tells us which index = default (1) vs good (0)
+                # Most credit models: class 1 = default/bad, class 0 = good
+                classes = list(model.classes_)
+                proba   = model.predict_proba(scaled)[0]
+
+                if 1 in classes:
+                    # class label 1 means "default / bad credit"
+                    default_idx = classes.index(1)
+                else:
+                    # fallback: use index 0
+                    default_idx = 0
+
+                dp = float(proba[default_idx])
+                rp = 1.0 - dp
+
+                # ── risk thresholds ───────────────────────────────────
+                if dp < 0.40:
                     tier, icon = "low",    "🟢"
                     verdict  = "Low Risk Applicant"
                     tagline  = "Strong financial indicators — recommended for approval."
                     reason   = "<strong>Positive signals detected.</strong> This applicant demonstrates solid financial stability — good credit history, adequate savings, and consistent employment. The probability of default is low."
-                elif dp < 0.80:
+                elif dp < 0.70:
                     tier, icon = "medium", "🟡"
                     verdict  = "Medium Risk Applicant"
                     tagline  = "Mixed indicators — consider with additional due diligence."
@@ -343,15 +240,17 @@ elif st.session_state.page == "input":
                     reason   = "<strong>Significant risk factors identified.</strong> Poor credit history, minimal savings, or limited employment history. High probability of default."
 
                 st.session_state.result = {
-                    "tier":tier,"icon":icon,"verdict":verdict,
-                    "tagline":tagline,"reason":reason,"dp":dp,"rp":rp,
+                    "tier":tier, "icon":icon, "verdict":verdict,
+                    "tagline":tagline, "reason":reason, "dp":dp, "rp":rp,
                     "inputs":{
-                        "Duration":f"{duration} months","Amount":amount,
-                        "Savings":{0:"Little",1:"Moderate",2:"Rich"}[int(savings)],
+                        "Duration":     f"{duration} months",
+                        "Amount":       amount,
+                        "Savings":      {0:"Little",1:"Moderate",2:"Rich"}[int(savings)],
                         "Credit History":{0:"Poor",1:"Average",2:"Good"}[int(credit_history)],
-                        "Employment":f"{employment_duration} yrs","Age":f"{age} yrs",
-                        "Housing":{0:"Rent",1:"Own",2:"Free"}[int(housing)],
-                        "Job Level":{0:"Unskilled",1:"Skilled",2:"Highly Skilled"}[int(job)],
+                        "Employment":   f"{employment_duration} yrs",
+                        "Age":          f"{age} yrs",
+                        "Housing":      {0:"Rent",1:"Own",2:"Free"}[int(housing)],
+                        "Job Level":    {0:"Unskilled",1:"Skilled",2:"Highly Skilled"}[int(job)],
                     }
                 }
                 go("result")
@@ -379,7 +278,7 @@ elif st.session_state.page == "input":
 
 
 # ╔══════════════════════════════════════════════════════╗
-# ║  PAGE 3 — RESULTS                                   ║
+# ║  PAGE 2 — RESULTS                                   ║
 # ╚══════════════════════════════════════════════════════╝
 elif st.session_state.page == "result":
 
@@ -410,7 +309,7 @@ elif st.session_state.page == "result":
     </div>
     """, unsafe_allow_html=True)
 
-    # progress bar — step 2 active
+    # progress — step 2
     st.markdown("""
     <div style="background:#EAE6DE;padding:10px 40px;
          display:flex;align-items:center;gap:10px;border-bottom:1px solid #D8D0C4;">
@@ -511,7 +410,7 @@ elif st.session_state.page == "result":
         </div>
         """, unsafe_allow_html=True)
 
-        # new borrower CTA banner
+        # new borrower banner
         st.markdown("""
         <div style="background:linear-gradient(135deg,#1C2B3A,#2D4A62);
              border-radius:18px;padding:28px 32px;text-align:center;margin-bottom:16px;">
@@ -528,8 +427,8 @@ elif st.session_state.page == "result":
             if st.button("🔄  New Borrower Assessment", use_container_width=True, type="primary"):
                 reset_and_go_input()
         with a2:
-            if st.button("🏠  Back to Home", use_container_width=True, type="secondary"):
-                go("welcome")
+            if st.button("🏠  Back to Input", use_container_width=True, type="secondary"):
+                go("input")
 
         st.markdown("""
         <div style="margin-top:40px;padding-top:18px;border-top:1px solid #D8D0C4;
