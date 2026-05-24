@@ -71,29 +71,20 @@ st.markdown("---")
 # SESSION STATE
 # =============================
 
-if "duration" not in st.session_state:
-    st.session_state.duration = ""
+default_states = {
+    "duration": "",
+    "amount": "",
+    "employment_duration": "",
+    "age": "",
+    "savings": 0,
+    "credit_history": 0,
+    "housing": 0,
+    "job": 0
+}
 
-if "amount" not in st.session_state:
-    st.session_state.amount = ""
-
-if "employment_duration" not in st.session_state:
-    st.session_state.employment_duration = ""
-
-if "age" not in st.session_state:
-    st.session_state.age = ""
-
-if "savings" not in st.session_state:
-    st.session_state.savings = 0
-
-if "credit_history" not in st.session_state:
-    st.session_state.credit_history = 0
-
-if "housing" not in st.session_state:
-    st.session_state.housing = 0
-
-if "job" not in st.session_state:
-    st.session_state.job = 0
+for key, value in default_states.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 # =============================
 # RESET FUNCTION
@@ -101,15 +92,8 @@ if "job" not in st.session_state:
 
 def reset_inputs():
 
-    st.session_state.duration = ""
-    st.session_state.amount = ""
-    st.session_state.employment_duration = ""
-    st.session_state.age = ""
-
-    st.session_state.savings = 0
-    st.session_state.credit_history = 0
-    st.session_state.housing = 0
-    st.session_state.job = 0
+    for key, value in default_states.items():
+        st.session_state[key] = value
 
     st.rerun()
 
@@ -132,7 +116,6 @@ amount = st.text_input(
 savings = st.selectbox(
     "Savings Level",
     options=[0, 1, 2],
-    index=st.session_state.savings,
     format_func=lambda x: {
         0: "0 - Little Savings",
         1: "1 - Moderate Savings",
@@ -144,7 +127,6 @@ savings = st.selectbox(
 credit_history = st.selectbox(
     "Credit History",
     options=[0, 1, 2],
-    index=st.session_state.credit_history,
     format_func=lambda x: {
         0: "0 - Poor",
         1: "1 - Average",
@@ -168,7 +150,6 @@ age = st.text_input(
 housing = st.selectbox(
     "Housing Type",
     options=[0, 1, 2],
-    index=st.session_state.housing,
     format_func=lambda x: {
         0: "0 - Rent",
         1: "1 - Own",
@@ -180,7 +161,6 @@ housing = st.selectbox(
 job = st.selectbox(
     "Job Skill Level",
     options=[0, 1, 2],
-    index=st.session_state.job,
     format_func=lambda x: {
         0: "0 - Unskilled",
         1: "1 - Skilled",
@@ -234,27 +214,69 @@ if predict_btn:
         ]])
 
         # =============================
-        # SCALE DATA
+        # SCALE INPUT
         # =============================
 
         scaled_data = scaler.transform(input_data)
 
         # =============================
-        # MODEL PREDICTION
+        # MODEL PROBABILITY
         # =============================
 
         probability = model.predict_proba(scaled_data)[0]
 
-        # =============================
-        # PROBABILITY SMOOTHING
-        # =============================
-
         raw_prob = probability[0]
 
-        # Neutralized probability
-        default_prob = 0.15 + (raw_prob * 0.7)
+        # =============================
+        # SMOOTH / BALANCE PROBABILITY
+        # =============================
 
-        # Safety cap
+        default_prob = 0.10 + (raw_prob * 0.55)
+
+        # =============================
+        # POSITIVE PROFILE CORRECTION
+        # =============================
+
+        positive_score = 0
+
+        if savings == 2:
+            positive_score += 1
+
+        if credit_history == 2:
+            positive_score += 1
+
+        if employment_duration and float(employment_duration) >= 5:
+            positive_score += 1
+
+        if housing == 1:
+            positive_score += 1
+
+        if job == 2:
+            positive_score += 1
+
+        # Reduce risk for strong borrowers
+        default_prob -= positive_score * 0.08
+
+        # =============================
+        # NEGATIVE PROFILE CORRECTION
+        # =============================
+
+        if savings == 0:
+            default_prob += 0.05
+
+        if credit_history == 0:
+            default_prob += 0.08
+
+        if employment_duration and float(employment_duration) < 1:
+            default_prob += 0.05
+
+        if job == 0:
+            default_prob += 0.04
+
+        # =============================
+        # SAFETY LIMITS
+        # =============================
+
         default_prob = min(max(default_prob, 0.05), 0.95)
 
         st.markdown("---")
@@ -277,14 +299,14 @@ if predict_btn:
 
             st.info(
                 "📌 Reason: Borrower shows strong financial stability "
-                "with good credit history, stable employment, and healthy savings."
+                "with healthy savings, stable employment, and good credit history."
             )
 
         # =============================
         # MEDIUM RISK
         # =============================
 
-        elif default_prob < 0.80:
+        elif default_prob < 0.75:
 
             st.warning("🟠 MEDIUM RISK")
 
@@ -297,9 +319,8 @@ if predict_btn:
             )
 
             st.info(
-                "📌 Reason: Borrower shows moderate financial indicators. "
-                "Certain factors indicate repayment ability while others "
-                "suggest moderate default risk."
+                "📌 Reason: Borrower has a balanced financial profile "
+                "with both positive and moderate risk indicators."
             )
 
         # =============================
@@ -320,7 +341,7 @@ if predict_btn:
 
             st.info(
                 "📌 Reason: Borrower shows weaker financial indicators "
-                "such as low savings, poor credit history, or unstable employment."
+                "such as poor credit history, low savings, or unstable employment."
             )
 
     except:
