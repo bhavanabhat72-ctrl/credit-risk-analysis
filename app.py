@@ -2,351 +2,309 @@ import streamlit as st
 import numpy as np
 import pickle
 
-# ============================================
+# =============================
 # LOAD MODEL + SCALER
-# ============================================
+# =============================
 
-model = pickle.load(open("model.pkl", "rb"))
-scaler = pickle.load(open("scaler.pkl", "rb"))
+model = pickle.load(open('model.pkl', 'rb'))
+scaler = pickle.load(open('scaler.pkl', 'rb'))
 
-# ============================================
+# =============================
 # PAGE CONFIG
-# ============================================
+# =============================
 
 st.set_page_config(
-    page_title="Credit Risk Prediction",
-    page_icon="🏦",
+    page_title="Credit Risk Analysis",
+    page_icon="💳",
     layout="centered"
 )
 
-# ============================================
-# SESSION STATE
-# ============================================
-
-if "reset_counter" not in st.session_state:
-    st.session_state.reset_counter = 0
-
-# ============================================
-# RESET FUNCTION
-# ============================================
-
-def reset_form():
-    st.session_state.reset_counter += 1
-
-# ============================================
+# =============================
 # CUSTOM CSS
-# ============================================
+# =============================
 
 st.markdown("""
 <style>
 
-.stApp {
-    background-color: #f5f7fa;
+.main-title{
+    text-align:center;
+    font-size:42px;
+    font-weight:bold;
+    color:#1E3A8A;
 }
 
-.main-title {
-    text-align: center;
-    font-size: 44px;
-    font-weight: bold;
-    color: #1f2937;
-    margin-bottom: 8px;
+.sub-title{
+    text-align:center;
+    font-size:18px;
+    color:gray;
+    margin-bottom:20px;
 }
 
-.sub-title {
-    text-align: center;
-    font-size: 19px;
-    color: #6b7280;
-    margin-bottom: 40px;
-}
-
-.result-box {
-    padding: 28px;
-    border-radius: 16px;
-    text-align: center;
-    margin-top: 35px;
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.low-risk {
-    background-color: #dcfce7;
-    color: #166534;
-    border: 2px solid #22c55e;
-}
-
-.medium-risk {
-    background-color: #fef9c3;
-    color: #854d0e;
-    border: 2px solid #eab308;
-}
-
-.high-risk {
-    background-color: #fee2e2;
-    color: #991b1b;
-    border: 2px solid #ef4444;
-}
-
-div[data-testid="stNumberInput"] input {
-    font-size: 17px !important;
-}
-
-div[data-testid="stSelectbox"] label,
-div[data-testid="stNumberInput"] label {
-    font-size: 16px !important;
-    font-weight: 600 !important;
+div.stButton > button{
+    width:100%;
+    border-radius:10px;
+    height:3em;
+    font-size:16px;
+    font-weight:bold;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ============================================
+# =============================
 # TITLE
-# ============================================
+# =============================
 
 st.markdown(
-    "<div class='main-title'>🏦 Credit Risk Prediction</div>",
+    "<div class='main-title'>💳 Credit Risk Analysis System</div>",
     unsafe_allow_html=True
 )
 
 st.markdown(
-    "<div class='sub-title'>Enter borrower details to predict loan default risk</div>",
+    "<div class='sub-title'>Predict whether a customer is Low Risk or High Risk</div>",
     unsafe_allow_html=True
 )
 
-# ============================================
-# INPUT FIELDS
-# ============================================
+st.markdown("---")
 
-col1, col2 = st.columns(2)
+# =============================
+# SESSION STATE INITIALIZATION
+# =============================
 
-with col1:
+if "duration" not in st.session_state:
+    st.session_state.duration = ""
 
-    duration = st.number_input(
-        "Loan Duration (Months)",
-        min_value=1,
-        step=1,
-        key=f"duration_{st.session_state.reset_counter}"
-    )
+if "amount" not in st.session_state:
+    st.session_state.amount = ""
 
-    amount = st.number_input(
-        "Credit Amount",
-        min_value=0,
-        step=1000,
-        key=f"amount_{st.session_state.reset_counter}"
-    )
+if "employment_duration" not in st.session_state:
+    st.session_state.employment_duration = ""
 
-    savings = st.selectbox(
-        "Savings Level",
-        ["Little Savings", "Moderate Savings", "Rich Savings"],
-        key=f"savings_{st.session_state.reset_counter}"
-    )
+if "age" not in st.session_state:
+    st.session_state.age = ""
 
-    employment_duration = st.number_input(
-        "Employment Duration (Years)",
-        min_value=0,
-        step=1,
-        key=f"employment_{st.session_state.reset_counter}"
-    )
+if "savings" not in st.session_state:
+    st.session_state.savings = 0
 
-with col2:
+if "credit_history" not in st.session_state:
+    st.session_state.credit_history = 0
 
-    credit_history = st.selectbox(
-        "Credit History",
-        ["Poor", "Average", "Good"],
-        key=f"credit_{st.session_state.reset_counter}"
-    )
+if "housing" not in st.session_state:
+    st.session_state.housing = 0
 
-    age = st.number_input(
-        "Age",
-        min_value=18,
-        step=1,
-        key=f"age_{st.session_state.reset_counter}"
-    )
+if "job" not in st.session_state:
+    st.session_state.job = 0
 
-    housing = st.selectbox(
-        "Housing Type",
-        ["Rent", "Own", "Free"],
-        key=f"housing_{st.session_state.reset_counter}"
-    )
+# =============================
+# RESET FUNCTION
+# =============================
 
-    job = st.selectbox(
-        "Job Skill Level",
-        ["Unskilled", "Skilled", "Highly Skilled"],
-        key=f"job_{st.session_state.reset_counter}"
-    )
+def reset_inputs():
 
-# ============================================
-# CATEGORY MAPPING
-# ============================================
+    st.session_state.duration = ""
+    st.session_state.amount = ""
+    st.session_state.employment_duration = ""
+    st.session_state.age = ""
 
-savings_map = {
-    "Little Savings": 0,
-    "Moderate Savings": 1,
-    "Rich Savings": 2
-}
+    st.session_state.savings = 0
+    st.session_state.credit_history = 0
+    st.session_state.housing = 0
+    st.session_state.job = 0
 
-credit_map = {
-    "Poor": 0,
-    "Average": 1,
-    "Good": 2
-}
-
-housing_map = {
-    "Rent": 0,
-    "Own": 1,
-    "Free": 2
-}
-
-job_map = {
-    "Unskilled": 0,
-    "Skilled": 1,
-    "Highly Skilled": 2
-}
-
-# ============================================
-# BUTTONS
-# ============================================
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-left, center1, center2, right = st.columns([1,2,2,1])
-
-with center1:
-    predict_btn = st.button(
-        "🔍 Predict Risk",
-        use_container_width=True,
-        type="primary"
-    )
-
-with center2:
-    reset_btn = st.button(
-        "↺ Reset Form",
-        use_container_width=True
-    )
-
-# ============================================
-# RESET
-# ============================================
-
-if reset_btn:
-    reset_form()
     st.rerun()
 
-# ============================================
+# =============================
+# INPUT FIELDS
+# =============================
+
+duration = st.text_input(
+    "Loan Duration (Months)",
+    placeholder="Example: 12",
+    key="duration"
+)
+
+amount = st.text_input(
+    "Credit Amount",
+    placeholder="Example: 5000",
+    key="amount"
+)
+
+savings = st.selectbox(
+    "Savings Level",
+    options=[0, 1, 2],
+    index=st.session_state.savings,
+    format_func=lambda x: {
+        0: "0 - Little Savings",
+        1: "1 - Moderate Savings",
+        2: "2 - Rich Savings"
+    }[x],
+    key="savings"
+)
+
+credit_history = st.selectbox(
+    "Credit History",
+    options=[0, 1, 2],
+    index=st.session_state.credit_history,
+    format_func=lambda x: {
+        0: "0 - Poor",
+        1: "1 - Average",
+        2: "2 - Good"
+    }[x],
+    key="credit_history"
+)
+
+employment_duration = st.text_input(
+    "Employment Duration (Years)",
+    placeholder="Example: 5",
+    key="employment_duration"
+)
+
+age = st.text_input(
+    "Age",
+    placeholder="Example: 30",
+    key="age"
+)
+
+housing = st.selectbox(
+    "Housing Type",
+    options=[0, 1, 2],
+    index=st.session_state.housing,
+    format_func=lambda x: {
+        0: "0 - Rent",
+        1: "1 - Own",
+        2: "2 - Free"
+    }[x],
+    key="housing"
+)
+
+job = st.selectbox(
+    "Job Skill Level",
+    options=[0, 1, 2],
+    index=st.session_state.job,
+    format_func=lambda x: {
+        0: "0 - Unskilled",
+        1: "1 - Skilled",
+        2: "2 - Highly Skilled"
+    }[x],
+    key="job"
+)
+
+st.markdown("---")
+
+# =============================
+# CENTERED BUTTONS
+# =============================
+
+space1, col1, col2, space2 = st.columns([1,2,2,1])
+
+with col1:
+    predict_btn = st.button("🔍 Predict")
+
+with col2:
+    reset_btn = st.button("🔄 Reset")
+
+# =============================
+# RESET ACTION
+# =============================
+
+if reset_btn:
+    reset_inputs()
+
+# =============================
 # PREDICTION
-# ============================================
+# =============================
 
 if predict_btn:
 
-    input_data = np.array([[
-        duration,
-        amount,
-        savings_map[savings],
-        credit_map[credit_history],
-        employment_duration,
-        age,
-        housing_map[housing],
-        job_map[job]
-    ]])
+    try:
 
-    scaled_data = scaler.transform(input_data)
+        input_data = np.array([[
+            float(duration),
+            float(amount),
+            float(savings),
+            float(credit_history),
+            float(employment_duration),
+            float(age),
+            float(housing),
+            float(job)
+        ]])
 
-    # ============================================
-    # PROBABILITY FIX
-    # ============================================
+        # SCALE DATA
+        scaled_data = scaler.transform(input_data)
 
-    probability = model.predict_proba(scaled_data)[0]
+        # PREDICT
+        prediction = model.predict(scaled_data)[0]
 
-    # Automatically detect default class
-    classes = model.classes_
+        probability = model.predict_proba(scaled_data)[0]
 
-    if 1 in classes:
-        default_index = list(classes).index(1)
-    else:
-        default_index = 0
+        # FIXED RISK PROBABILITY
+        default_prob = probability[0]
 
-    default_prob = probability[default_index]
-    repay_prob = 1 - default_prob
+        st.markdown("---")
 
-    # ============================================
-    # DEBUG INFO
-    # ============================================
+        # =============================
+        # LOW RISK
+        # =============================
 
-    st.write("Model Classes:", classes)
-    st.write("Prediction Probabilities:", probability)
+        if default_prob < 0.35:
 
-    # ============================================
-    # RISK CLASSIFICATION
-    # ============================================
+            st.success("🟢 LOW RISK")
 
-    if default_prob < 0.35:
+            st.write(
+                f"🔴 Default Risk: {default_prob*100:.2f}%"
+            )
 
-        risk = "🟢 LOW RISK"
-        risk_class = "low-risk"
+            st.write(
+                f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%"
+            )
 
-        reason = """
-        Borrower shows strong financial indicators such as
-        good credit behaviour, stable employment, and better repayment capacity.
-        """
+            st.info(
+                "📌 Reason: Borrower shows strong financial stability "
+                "with good credit history, stable employment, and better savings."
+            )
 
-    elif default_prob < 0.75:
+        # =============================
+        # MEDIUM RISK
+        # =============================
 
-        risk = "🟡 MEDIUM RISK"
-        risk_class = "medium-risk"
+        elif default_prob < 0.80:
 
-        reason = """
-        Borrower shows mixed financial indicators.
-        Some factors indicate repayment capability while others introduce moderate risk.
-        """
+            st.warning("🟠 MEDIUM RISK")
 
-    else:
+            st.write(
+                f"🔴 Default Risk: {default_prob*100:.2f}%"
+            )
 
-        risk = "🔴 HIGH RISK"
-        risk_class = "high-risk"
+            st.write(
+                f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%"
+            )
 
-        reason = """
-        Borrower shows weaker financial indicators such as
-        poor credit history, low savings, or unstable employment.
-        """
+            st.info(
+                "📌 Reason: Borrower has moderate financial indicators. "
+                "Some factors support repayment while others indicate moderate risk."
+            )
 
-    # ============================================
-    # RESULT DISPLAY
-    # ============================================
+        # =============================
+        # HIGH RISK
+        # =============================
 
-    st.markdown(f"""
-    <div class='result-box {risk_class}'>
+        else:
 
-        {risk}
+            st.error("🔴 HIGH RISK")
 
-        <br><br>
+            st.write(
+                f"🔴 Default Risk: {default_prob*100:.2f}%"
+            )
 
-        🔴 Default Risk: {default_prob*100:.2f}%
+            st.write(
+                f"🟢 Repayment Probability: {(1-default_prob)*100:.2f}%"
+            )
 
-        <br><br>
+            st.info(
+                "📌 Reason: Borrower shows weaker financial indicators "
+                "such as poor credit history, low savings, or unstable employment."
+            )
 
-        🟢 Repayment Probability: {repay_prob*100:.2f}%
+    except:
 
-        <br><br>
-
-        📌 Reason:
-        {reason}
-
-    </div>
-    """, unsafe_allow_html=True)
-
-# ============================================
-# FOOTER
-# ============================================
-
-st.markdown("""
-<br><br>
-
-<div style="
-    text-align:center;
-    color:#6b7280;
-    font-size:14px;
-">
-    CreditLens Risk Intelligence <br>
-    Powered by scikit-learn · For authorized use only
-</div>
-""", unsafe_allow_html=True)
+        st.error("⚠️ Please enter valid numeric values in all text fields.")
