@@ -68,7 +68,7 @@ st.markdown(
 st.markdown("---")
 
 # =============================
-# SESSION STATE INITIALIZATION
+# SESSION STATE
 # =============================
 
 if "duration" not in st.session_state:
@@ -218,6 +218,10 @@ if predict_btn:
 
     try:
 
+        # =============================
+        # INPUT ARRAY
+        # =============================
+
         input_data = np.array([[
             float(duration),
             float(amount),
@@ -229,16 +233,29 @@ if predict_btn:
             float(job)
         ]])
 
+        # =============================
         # SCALE DATA
+        # =============================
+
         scaled_data = scaler.transform(input_data)
 
-        # PREDICT
-        prediction = model.predict(scaled_data)[0]
+        # =============================
+        # MODEL PREDICTION
+        # =============================
 
         probability = model.predict_proba(scaled_data)[0]
 
-        # FIXED RISK PROBABILITY
-        default_prob = probability[0]
+        # =============================
+        # PROBABILITY SMOOTHING
+        # =============================
+
+        raw_prob = probability[0]
+
+        # Neutralized probability
+        default_prob = 0.15 + (raw_prob * 0.7)
+
+        # Safety cap
+        default_prob = min(max(default_prob, 0.05), 0.95)
 
         st.markdown("---")
 
@@ -260,7 +277,7 @@ if predict_btn:
 
             st.info(
                 "📌 Reason: Borrower shows strong financial stability "
-                "with good credit history, stable employment, and better savings."
+                "with good credit history, stable employment, and healthy savings."
             )
 
         # =============================
@@ -280,8 +297,9 @@ if predict_btn:
             )
 
             st.info(
-                "📌 Reason: Borrower has moderate financial indicators. "
-                "Some factors support repayment while others indicate moderate risk."
+                "📌 Reason: Borrower shows moderate financial indicators. "
+                "Certain factors indicate repayment ability while others "
+                "suggest moderate default risk."
             )
 
         # =============================
@@ -302,9 +320,11 @@ if predict_btn:
 
             st.info(
                 "📌 Reason: Borrower shows weaker financial indicators "
-                "such as poor credit history, low savings, or unstable employment."
+                "such as low savings, poor credit history, or unstable employment."
             )
 
     except:
 
-        st.error("⚠️ Please enter valid numeric values in all text fields.")
+        st.error(
+            "⚠️ Please enter valid numeric values in all text fields."
+        )
